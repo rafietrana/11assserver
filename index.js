@@ -110,64 +110,22 @@ async function run() {
       res.send(result);
     });
 
+    app.post("/setApplied", async (req, res) => {
+      const data = req.body;
+      const result = await appliedCollection.insertOne(data);
+      res.send(result);
+    });
 
+    app.patch("/inccount/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $inc: { applicantsNumber: 1 },
+      };
 
-  app.post('/setApplied', async(req, res)=>{
-           const data = req.body;
-           const result = await appliedCollection.insertOne(data)
-           res.send(result)
-          
-  })
-
-
-//   app.patch('/inccount/:id', async(req, res) => {
-//     try {
-//         const id = req.params.id;
-//         const query = { _id: new ObjectId(id) };
-        
- 
-//         const job = await jobCollection.findOne(query);
-
- 
-//         if (!job || !job.applicantsNumber) {
-//             return res.status(404).send("not found");
-//         }
-
- 
-//         const convertNumber = parseInt(job.applicantsNumber);
-//         console.log('convert number is', convertNumber);
-
-
-
-//         console.log(typeof convertNumber);
-
-
- 
-//           const updateDoc = {
-//             $inc: { convertNumber: 1 },
-//           }
-
-
-//           const  result = await jobCollection.updateOne(query, updateDoc)
-//           console.log('result is ', result);
-//           res.send(result)
- 
- 
-//     } catch (error) {
-//         console.error("Error:", error);
-//         res.status(500).send("i find error in code");
-//     }
-// });
-
-
-
-
-
-
-
-
-
-
+      const result = await jobCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
 
     // main area end
 
@@ -182,12 +140,19 @@ async function run() {
       const result = await blogCollection.find().toArray();
       res.send(result);
     });
-     app.get('/getjob/:id', async(req, res)=>{
+    app.get("/getjob/:id", async (req, res) => {
       const id = req.params.id;
-      const  query = {_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) };
       const result = await jobCollection.findOne(query);
-      res.send(result)
-     })
+      res.send(result);
+    });
+
+    app.get("/getmyjob/:userEmail", async (req, res) => {
+      const userEmail = req.params.userEmail;
+      const query = { userEmail: userEmail };
+      const result = await jobCollection.find(query).toArray();
+      res.send(result);
+    });
 
     app.get("/");
 
