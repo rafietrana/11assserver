@@ -120,6 +120,52 @@ async function run() {
   })
 
 
+//   app.patch('/inccount/:id', async(req, res) => {
+//     try {
+//         const id = req.params.id;
+//         const query = { _id: new ObjectId(id) };
+        
+ 
+//         const job = await jobCollection.findOne(query);
+
+ 
+//         if (!job || !job.applicantsNumber) {
+//             return res.status(404).send("not found");
+//         }
+
+ 
+//         const convertNumber = parseInt(job.applicantsNumber);
+//         console.log('convert number is', convertNumber);
+
+
+
+//         console.log(typeof convertNumber);
+
+
+ 
+//           const updateDoc = {
+//             $inc: { convertNumber: 1 },
+//           }
+
+
+//           const  result = await jobCollection.updateOne(query, updateDoc)
+//           console.log('result is ', result);
+//           res.send(result)
+ 
+ 
+//     } catch (error) {
+//         console.error("Error:", error);
+//         res.status(500).send("i find error in code");
+//     }
+// });
+
+
+
+
+
+
+
+
 
 
 
