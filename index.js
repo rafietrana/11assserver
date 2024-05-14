@@ -154,6 +154,64 @@ async function run() {
       res.send(result);
     });
 
+
+
+
+    app.put('/updatedata/:id', async(req, res)=>{
+      const id = req.params.id;
+      const defultData = req.body;
+      const filter = {_id: new ObjectId(id)}
+
+
+      const options = { upsert: true };
+
+      const updateDoc = {
+        $set:{
+            bannarImg :  defultData.bannarImg,
+            jobTitle :  defultData.jobTitle,
+            userName :  defultData.userName,
+            userEmail :  defultData.userEmail,
+            minPrice :  defultData.minPrice,
+            maxPrice :  defultData.maxPrice,
+            postDate :  defultData.postDate,
+            jobCategory :  defultData.jobCategory,
+            applicantsNumber :  defultData.applicantsNumber,
+            applicationDeadline :  defultData.applicationDeadline,
+            jobDescription :  defultData.jobDescription
+        }
+      }
+
+      const result = await jobCollection.updateOne(filter, updateDoc, options)
+      res.send(result)
+
+
+    })
+    app.delete("/deletedata/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const filter = { _id: new ObjectId(id) };
+      const result = await  jobCollection.deleteOne(filter);
+      res.send(result);
+    });
+
+
+
+
+    app.get('/gets', async(req,res)=>{
+      const email = req.query.email;
+      const filter = req.query.filter;
+      let query = {
+        userEmail: email,
+
+      };
+ 
+      if(filter){
+        query.jobCategorys= filter
+      }
+      const result = await appliedCollection.find(query).toArray()
+      res.send(result)
+    })
+
     app.get("/");
 
     await client.db("admin").command({ ping: 1 });
