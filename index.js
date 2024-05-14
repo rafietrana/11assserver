@@ -2,18 +2,19 @@ const express = require("express");
 const app = express();
 require("dotenv").config();
 const cors = require("cors");
-const cookieParser = require("cookie-parser");
+
 const port = process.env.PORT || 5000;
+var jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 
 // MIDDLEWARE
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors());
 
 app.use(
   cors({
-    origin: ["http://localhost:5173/", "http://localhost:5173/"],
+    origin: ["http://localhost:5173", "http://localhost:5174"],
     credentials: true,
   })
 );
@@ -31,24 +32,6 @@ const client = new MongoClient(uri, {
 });
 
 // custom middleWare
-
-const verifyToken = (req, res, next) => {
-  const token = req.cookies.token;
-  console.log("token frome middleware", token);
-
-  if (!token) {
-    res.status(401).send("Unothorizw token");
-  }
-  jwt.verify(token, process.env.ACCES_TOKEN_SECRET, (err, decoded) => {
-    if (err) {
-      res.status(401).send("UnAutorize Token");
-    }
-    req.user = decoded;
-    next();
-  });
-
-  // next();
-};
 
 async function run() {
   try {
@@ -75,13 +58,21 @@ async function run() {
         })
         .send({ sucess: true });
     });
+
+ 
     app.post("/logout", (req, res) => {
-      console.log("logout backend is hitting now alhamdulillah");
+      console.log('logout backend is hitting now alhamdulillah');
       const user = req.body;
       console.log("clear method is now hited");
 
       res.clearCookie("token", { maxAge: 0 }).send({ sucess: true });
     });
+
+
+
+
+
+
 
     // services related auth
 
@@ -154,63 +145,53 @@ async function run() {
       res.send(result);
     });
 
-
-
-
-    app.put('/updatedata/:id', async(req, res)=>{
+    app.put("/updatedata/:id", async (req, res) => {
       const id = req.params.id;
       const defultData = req.body;
-      const filter = {_id: new ObjectId(id)}
-
+      const filter = { _id: new ObjectId(id) };
 
       const options = { upsert: true };
 
       const updateDoc = {
-        $set:{
-            bannarImg :  defultData.bannarImg,
-            jobTitle :  defultData.jobTitle,
-            userName :  defultData.userName,
-            userEmail :  defultData.userEmail,
-            minPrice :  defultData.minPrice,
-            maxPrice :  defultData.maxPrice,
-            postDate :  defultData.postDate,
-            jobCategory :  defultData.jobCategory,
-            applicantsNumber :  defultData.applicantsNumber,
-            applicationDeadline :  defultData.applicationDeadline,
-            jobDescription :  defultData.jobDescription
-        }
-      }
+        $set: {
+          bannarImg: defultData.bannarImg,
+          jobTitle: defultData.jobTitle,
+          userName: defultData.userName,
+          userEmail: defultData.userEmail,
+          minPrice: defultData.minPrice,
+          maxPrice: defultData.maxPrice,
+          postDate: defultData.postDate,
+          jobCategory: defultData.jobCategory,
+          applicantsNumber: defultData.applicantsNumber,
+          applicationDeadline: defultData.applicationDeadline,
+          jobDescription: defultData.jobDescription,
+        },
+      };
 
-      const result = await jobCollection.updateOne(filter, updateDoc, options)
-      res.send(result)
-
-
-    })
+      const result = await jobCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
+    });
     app.delete("/deletedata/:id", async (req, res) => {
       const id = req.params.id;
 
       const filter = { _id: new ObjectId(id) };
-      const result = await  jobCollection.deleteOne(filter);
+      const result = await jobCollection.deleteOne(filter);
       res.send(result);
     });
 
-
-
-
-    app.get('/gets', async(req,res)=>{
+    app.get("/gets", async (req, res) => {
       const email = req.query.email;
       const filter = req.query.filter;
       let query = {
         userEmail: email,
-
       };
- 
-      if(filter){
-        query.jobCategorys= filter
+
+      if (filter) {
+        query.jobCategorys = filter;
       }
-      const result = await appliedCollection.find(query).toArray()
-      res.send(result)
-    })
+      const result = await appliedCollection.find(query).toArray();
+      res.send(result);
+    });
 
     app.get("/");
 
