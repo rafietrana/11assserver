@@ -32,6 +32,25 @@ const client = new MongoClient(uri, {
 });
 
 // custom middleWare
+const verifyToken = (req, res, next) => {
+  const token = req.cookies.token;
+  console.log("token frome middleware", token);
+
+
+  if(!token){
+    res.status(401).send('Unothorizw token');
+  }
+  jwt.verify(token, process.env.ACCES_TOKEN_SECRET,  (err, decoded)=>{
+       if(err){
+        res.status(401).send(' This is UnAutorize Token')
+       }
+       req.user = decoded;
+       next();
+  })
+
+ 
+};
+
 
 async function run() {
   try {
@@ -131,21 +150,21 @@ async function run() {
       const result = await blogCollection.find().toArray();
       res.send(result);
     });
-    app.get("/getjob/:id", async (req, res) => {
+    app.get("/getjob/:id",verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await jobCollection.findOne(query);
       res.send(result);
     });
 
-    app.get("/getmyjob/:userEmail", async (req, res) => {
+    app.get("/getmyjob/:userEmail", verifyToken, async (req, res) => {
       const userEmail = req.params.userEmail;
       const query = { userEmail: userEmail };
       const result = await jobCollection.find(query).toArray();
       res.send(result);
     });
 
-    app.put("/updatedata/:id", async (req, res) => {
+    app.put("/updatedata/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const defultData = req.body;
       const filter = { _id: new ObjectId(id) };
