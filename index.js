@@ -14,7 +14,12 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "my-assignment--11.web.app",
+      "my-assignment--11.firebaseapp.com",
+    ],
     credentials: true,
   })
 );
@@ -36,25 +41,27 @@ const verifyToken = (req, res, next) => {
   const token = req.cookies.token;
   console.log("token frome middleware", token);
 
-
-  if(!token){
-    res.status(401).send('Unothorizw token');
+  if (!token) {
+    res.status(401).send("Unothorizw token");
   }
-  jwt.verify(token, process.env.ACCES_TOKEN_SECRET,  (err, decoded)=>{
-       if(err){
-        res.status(401).send(' This is UnAutorize Token')
-       }
-       req.user = decoded;
-       next();
-  })
-
- 
+  jwt.verify(token, process.env.ACCES_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      res.status(401).send(" This is UnAutorize Token");
+    }
+    req.user = decoded;
+    next();
+  });
 };
 
+const cookeOption = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production" ?  true : false,
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+}
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
 
     const jobCollection = client.db("jobDB").collection("jobs");
     const appliedCollection = client.db("jobDB").collection("applied");
@@ -70,28 +77,16 @@ async function run() {
         expiresIn: "1h",
       });
       res
-        .cookie("token", token, {
-          httpOnly: true,
-          secure: true,
-          sameSite: "strict",
-        })
-        .send({ sucess: true });
+        .cookie("token", token, cookeOption).send({ sucess: true });
     });
 
- 
     app.post("/logout", (req, res) => {
-      console.log('logout backend is hitting now alhamdulillah');
+      console.log("logout backend is hitting now alhamdulillah");
       const user = req.body;
       console.log("clear method is now hited");
 
-      res.clearCookie("token", { maxAge: 0 }).send({ sucess: true });
+      res.clearCookie("token", { ...cookeOption, maxAge: 0 }).send({ sucess: true });
     });
-
-
-
-
-
-
 
     // services related auth
 
@@ -150,7 +145,7 @@ async function run() {
       const result = await blogCollection.find().toArray();
       res.send(result);
     });
-    app.get("/getjob/:id",verifyToken, async (req, res) => {
+    app.get("/getjob/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await jobCollection.findOne(query);
@@ -164,7 +159,7 @@ async function run() {
       res.send(result);
     });
 
-    app.put("/updatedata/:id", verifyToken, async (req, res) => {
+    app.put("/updatedata/:id",  async (req, res) => {
       const id = req.params.id;
       const defultData = req.body;
       const filter = { _id: new ObjectId(id) };
@@ -214,7 +209,7 @@ async function run() {
 
     app.get("/");
 
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
