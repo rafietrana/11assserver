@@ -55,9 +55,9 @@ const verifyToken = (req, res, next) => {
 
 const cookeOption = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production" ?  true : false,
+  secure: process.env.NODE_ENV === "production" ? true : false,
   sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-}
+};
 
 async function run() {
   try {
@@ -66,6 +66,7 @@ async function run() {
     const jobCollection = client.db("jobDB").collection("jobs");
     const appliedCollection = client.db("jobDB").collection("applied");
     const blogCollection = client.db("BlogsDB").collection("blogs");
+    const wishCollection = client.db("BlogsDB").collection("wish");
 
     //auth related api
 
@@ -76,8 +77,7 @@ async function run() {
       const token = jwt.sign(user, process.env.ACCES_TOKEN_SECRET, {
         expiresIn: "1h",
       });
-      res
-        .cookie("token", token, cookeOption).send({ sucess: true });
+      res.cookie("token", token, cookeOption).send({ sucess: true });
     });
 
     app.post("/logout", (req, res) => {
@@ -85,7 +85,9 @@ async function run() {
       const user = req.body;
       console.log("clear method is now hited");
 
-      res.clearCookie("token", { ...cookeOption, maxAge: 0 }).send({ sucess: true });
+      res
+        .clearCookie("token", { ...cookeOption, maxAge: 0 })
+        .send({ sucess: true });
     });
 
     // services related auth
@@ -131,6 +133,16 @@ async function run() {
       const result = await jobCollection.updateOne(query, updateDoc);
       res.send(result);
     });
+    // wish data
+    app.post("/postwish", async (req, res) => {
+      const wishData = req.body;
+      const result = await wishCollection.insertOne(wishData);
+      res.send(result);
+    });
+    app.get('/getwish', async (req, res)=>{
+      const result = await wishCollection.find().toArray();
+      res.send(result)
+    })
 
     // main area end
 
@@ -159,7 +171,7 @@ async function run() {
       res.send(result);
     });
 
-    app.put("/updatedata/:id",  async (req, res) => {
+    app.put("/updatedata/:id", async (req, res) => {
       const id = req.params.id;
       const defultData = req.body;
       const filter = { _id: new ObjectId(id) };
