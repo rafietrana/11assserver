@@ -17,7 +17,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://localhost:5174",
-      "my-assignment--11.web.app",
+      "https://my-assignment--11.web.app",
       "my-assignment--11.firebaseapp.com",
     ],
     credentials: true,
@@ -139,10 +139,10 @@ async function run() {
       const result = await wishCollection.insertOne(wishData);
       res.send(result);
     });
-    app.get('/getwish', async (req, res)=>{
+    app.get("/getwish", async (req, res) => {
       const result = await wishCollection.find().toArray();
-      res.send(result)
-    })
+      res.send(result);
+    });
 
     // main area end
 
