@@ -25,7 +25,7 @@ app.use(
 );
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.hv89ofo.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = "mongodb+srv://my_ass_11:jGDuRnu3qvexXzHv@cluster0.hv89ofo.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -39,7 +39,7 @@ const client = new MongoClient(uri, {
 // custom middleWare
 const verifyToken = (req, res, next) => {
   const token = req.cookies.token;
-  console.log("token frome middleware", token);
+  // console.log("token frome middleware", token);
 
   if (!token) {
     res.status(401).send("Unothorizw token");
@@ -61,9 +61,10 @@ const cookeOption = {
 
 async function run() {
   try {
-    // await client.connect();
+    await client.connect();
 
     const jobCollection = client.db("jobDB").collection("jobs");
+    const newJobCollection = client.db("jobDB").collection("newJob");
     const appliedCollection = client.db("jobDB").collection("applied");
     const blogCollection = client.db("BlogsDB").collection("blogs");
     const wishCollection = client.db("BlogsDB").collection("wish");
@@ -72,7 +73,7 @@ async function run() {
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
-      console.log("user value is ", req.body);
+      // console.log("user value is ", req.body);
 
       const token = jwt.sign(user, process.env.ACCES_TOKEN_SECRET, {
         expiresIn: "1h",
@@ -97,6 +98,13 @@ async function run() {
       const result = await jobCollection.find().toArray();
       res.send(result);
     });
+
+    // get new job
+
+    app.get("/getNewJob", async(req, res)=>{
+      const result = await newJobCollection.find().toArray();
+      res.send(result)
+    })
 
     app.get("/getTableCard", async (req, res) => {
       const search = req.query.search;
@@ -146,12 +154,25 @@ async function run() {
 
     // main area end
 
-    app.post("/jobpost", async (req, res) => {
-      console.log("jobpost is now hitting alhamdulillah");
-      const jobInfo = req.body;
-      const result = await jobCollection.insertOne(jobInfo);
-      res.send(result);
-    });
+app.post("/jobpost", async (req, res) => {
+  try {
+    console.log("alhamdulillah jobpost hitting");
+
+    const jobInfo = req.body;
+
+    if (!jobInfo) {
+      return res.status(400).send({ message: "No job data provided" });
+    }
+
+    const result = await jobCollection.insertOne(jobInfo);
+
+    res.send(result);
+  } catch (error) {
+    console.error("Jobpost error:", error);
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+});
+
 
     app.get("/getblogs", async (req, res) => {
       const result = await blogCollection.find().toArray();
