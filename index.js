@@ -66,10 +66,11 @@ async function run() {
     const jobCollection = client.db("jobDB").collection("jobs");
     const newJobCollection = client.db("jobDB").collection("newJob");
     const appliedCollection = client.db("jobDB").collection("applied");
-    const blogCollection = client.db("BlogsDB").collection("blogs");
+    const blogCollection = client.db("BlogsDB").collection("newBlogs");
     const wishCollection = client.db("BlogsDB").collection("wish");
 
     //auth related api
+
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
@@ -117,13 +118,34 @@ async function run() {
       const result = await jobCollection.find(query, options).toArray();
       res.send(result);
     });
+app.get("/finalcard/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+ 
+    
 
-    app.get("/finalcard/:id", async (req, res) => {
-      const ids = req.params?.id;
-      const query = { _id: new ObjectId(ids) };
-      const result = await blogCollection.findOne(query);
-      res.send(result);
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid blog ID" });
+    }
+
+    const blog = await blogCollection.findOne({
+      _id: new ObjectId(id),
     });
+
+    if (!blog) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+
+    res.json(blog);
+
+
+    
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
     app.post("/setApplied", async (req, res) => {
       const data = req.body;
@@ -185,9 +207,9 @@ app.post("/jobpost", async (req, res) => {
       res.send(result);
     });
 
-    app.get("/getmyjob/:userEmail", verifyToken, async (req, res) => {
+    app.get("/getmyjob/:userEmail",  async (req, res) => {
       const userEmail = req.params.userEmail;
-      const query = { userEmail: userEmail };
+      const query = { createdBy: userEmail };
       const result = await jobCollection.find(query).toArray();
       res.send(result);
     });
