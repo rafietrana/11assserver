@@ -234,6 +234,7 @@ app.post("/jobpost", async (req, res) => {
           applicantsNumber: defultData.applicantsNumber,
           applicationDeadline: defultData.applicationDeadline,
           jobDescription: defultData.jobDescription,
+          tags: defultData.tags
         },
       };
 
