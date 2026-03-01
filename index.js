@@ -68,6 +68,7 @@ async function run() {
     const appliedCollection = client.db("jobDB").collection("applied");
     const blogCollection = client.db("BlogsDB").collection("newBlogs");
     const wishCollection = client.db("BlogsDB").collection("wish");
+    const commentsCollection = client.db("BlogsDB").collection("comments")
 
     //auth related api
 
@@ -262,6 +263,28 @@ app.post("/jobpost", async (req, res) => {
       const result = await appliedCollection.find(query).toArray();
       res.send(result);
     });
+
+
+
+
+    // blog comment ...................................................................
+    // Add Comment
+app.post("/comments", async (req, res) => {
+  const result = await commentsCollection.insertOne(req.body);
+  const inserted = await commentsCollection.findOne({
+    _id: result.insertedId,
+  });
+  res.send(inserted);
+});
+
+// Get Comments by Blog ID
+app.get("/comments/:id", async (req, res) => {
+  const result = await commentsCollection
+    .find({ blogId: req.params.id })
+    .sort({ createdAt: -1 })
+    .toArray();
+  res.send(result);
+});
 
     app.get("/");
 
