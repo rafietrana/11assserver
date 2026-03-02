@@ -17,15 +17,15 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://localhost:5174",
-      "https://my-assignment--11.web.app",
+      "https://11assserver.vercel.app",
       "my-assignment--11.firebaseapp.com",
     ],
     credentials: true,
-  })
+  }),
 );
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const uri = "mongodb+srv://my_ass_11:jGDuRnu3qvexXzHv@cluster0.hv89ofo.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.hv89ofo.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -42,11 +42,11 @@ const verifyToken = (req, res, next) => {
   // console.log("token frome middleware", token);
 
   if (!token) {
-    res.status(401).send("Unothorizw token");
+    return res.status(401).send("Unothorizw token");
   }
   jwt.verify(token, process.env.ACCES_TOKEN_SECRET, (err, decoded) => {
     if (err) {
-      res.status(401).send(" This is UnAutorize Token");
+      return res.status(401).send(" This is UnAutorize Token");
     }
     req.user = decoded;
     next();
@@ -61,17 +61,16 @@ const cookeOption = {
 
 async function run() {
   try {
-    await client.connect();
+ 
 
     const jobCollection = client.db("jobDB").collection("jobs");
     const newJobCollection = client.db("jobDB").collection("newJob");
     const appliedCollection = client.db("jobDB").collection("applied");
     const blogCollection = client.db("BlogsDB").collection("newBlogs");
     const wishCollection = client.db("BlogsDB").collection("wish");
-    const commentsCollection = client.db("BlogsDB").collection("comments")
+    const commentsCollection = client.db("BlogsDB").collection("comments");
 
     //auth related api
-
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
@@ -103,10 +102,10 @@ async function run() {
 
     // get new job
 
-    app.get("/getNewJob", async(req, res)=>{
+    app.get("/getNewJob", async (req, res) => {
       const result = await newJobCollection.find().toArray();
-      res.send(result)
-    })
+      res.send(result);
+    });
 
     app.get("/getTableCard", async (req, res) => {
       const search = req.query.search;
@@ -119,34 +118,28 @@ async function run() {
       const result = await jobCollection.find(query, options).toArray();
       res.send(result);
     });
-app.get("/finalcard/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
- 
-    
+    app.get("/finalcard/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
 
-    if (!ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid blog ID" });
-    }
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).json({ message: "Invalid blog ID" });
+        }
 
-    const blog = await blogCollection.findOne({
-      _id: new ObjectId(id),
+        const blog = await blogCollection.findOne({
+          _id: new ObjectId(id),
+        });
+
+        if (!blog) {
+          return res.status(404).json({ message: "Blog not found" });
+        }
+
+        res.json(blog);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+      }
     });
-
-    if (!blog) {
-      return res.status(404).json({ message: "Blog not found" });
-    }
-
-    res.json(blog);
-
-
-    
-    
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
-  }
-});
 
     app.post("/setApplied", async (req, res) => {
       const data = req.body;
@@ -177,25 +170,24 @@ app.get("/finalcard/:id", async (req, res) => {
 
     // main area end
 
-app.post("/jobpost", async (req, res) => {
-  try {
-    console.log("alhamdulillah jobpost hitting");
+    app.post("/jobpost", async (req, res) => {
+      try {
+        console.log("alhamdulillah jobpost hitting");
 
-    const jobInfo = req.body;
+        const jobInfo = req.body;
 
-    if (!jobInfo) {
-      return res.status(400).send({ message: "No job data provided" });
-    }
+        if (!jobInfo) {
+          return res.status(400).send({ message: "No job data provided" });
+        }
 
-    const result = await jobCollection.insertOne(jobInfo);
+        const result = await jobCollection.insertOne(jobInfo);
 
-    res.send(result);
-  } catch (error) {
-    console.error("Jobpost error:", error);
-    res.status(500).send({ message: "Internal Server Error" });
-  }
-});
-
+        res.send(result);
+      } catch (error) {
+        console.error("Jobpost error:", error);
+        res.status(500).send({ message: "Internal Server Error" });
+      }
+    });
 
     app.get("/getblogs", async (req, res) => {
       const result = await blogCollection.find().toArray();
@@ -208,7 +200,7 @@ app.post("/jobpost", async (req, res) => {
       res.send(result);
     });
 
-    app.get("/getmyjob/:userEmail",  async (req, res) => {
+    app.get("/getmyjob/:userEmail", async (req, res) => {
       const userEmail = req.params.userEmail;
       const query = { createdBy: userEmail };
       const result = await jobCollection.find(query).toArray();
@@ -235,7 +227,7 @@ app.post("/jobpost", async (req, res) => {
           applicantsNumber: defultData.applicantsNumber,
           applicationDeadline: defultData.applicationDeadline,
           jobDescription: defultData.jobDescription,
-          tags: defultData.tags
+          tags: defultData.tags,
         },
       };
 
@@ -264,33 +256,28 @@ app.post("/jobpost", async (req, res) => {
       res.send(result);
     });
 
-
-
-
     // blog comment ...................................................................
     // Add Comment
-app.post("/comments", async (req, res) => {
-  const result = await commentsCollection.insertOne(req.body);
-  const inserted = await commentsCollection.findOne({
-    _id: result.insertedId,
-  });
-  res.send(inserted);
-});
+    app.post("/comments", async (req, res) => {
+      const result = await commentsCollection.insertOne(req.body);
+      const inserted = await commentsCollection.findOne({
+        _id: result.insertedId,
+      });
+      res.send(inserted);
+    });
 
-// Get Comments by Blog ID
-app.get("/comments/:id", async (req, res) => {
-  const result = await commentsCollection
-    .find({ blogId: req.params.id })
-    .sort({ createdAt: -1 })
-    .toArray();
-  res.send(result);
-});
-
-    app.get("/");
+    // Get Comments by Blog ID
+    app.get("/comments/:id", async (req, res) => {
+      const result = await commentsCollection
+        .find({ blogId: req.params.id })
+        .sort({ createdAt: -1 })
+        .toArray();
+      res.send(result);
+    });
 
     // await client.db("admin").command({ ping: 1 });
     console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
+      "Pinged your deployment. You successfully connected to MongoDB!",
     );
   } finally {
     // Ensures that the client will close when you finish/error
@@ -303,6 +290,7 @@ app.get("/", (req, res) => {
   res.send("your browser is now runnig sucessfully alhamudlillah");
 });
 
-app.listen(port, () => {
-  console.log(`Your Surver is now running port on ${port}`);
-});
+// app.listen(port, () => {
+//   console.log(`Your Surver is now running port on ${port}`);
+// });
+module.exports = app;
