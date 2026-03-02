@@ -17,7 +17,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://localhost:5174",
-      "https://11assserver.vercel.app",
+      "https://11assclint.vercel.app",
       "my-assignment--11.firebaseapp.com",
     ],
     credentials: true,
